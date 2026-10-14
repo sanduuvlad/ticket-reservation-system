@@ -40,17 +40,21 @@ func main() {
 
 	// Repository
 	venueRepository := repository.NewVenueRepository(pool)
+	eventRepository := repository.NewEventRepository(pool)
 
 	// Usecase
 	venueUsecase := usecase.NewVenueUsecase(venueRepository)
+	eventUsecase := usecase.NewEventUsecase(eventRepository)
 
 	// Handler
 	venueHandler := handler.NewVenueHandler(venueUsecase)
+	eventHandler := handler.NewEventHandler(eventUsecase)
 
 	// Router
 	router := gin.Default()
 
 	router.POST("/venues", venueHandler.CreateVenue)
+	router.POST("/events", eventHandler.CreateEvent)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.HTTPServer.Port)
