@@ -27,7 +27,7 @@ type Postgres struct {
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return nil, fmt.Errorf("load .env: %w", err)

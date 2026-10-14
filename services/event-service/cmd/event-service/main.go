@@ -6,8 +6,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/config"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/database"
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/handler"
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/repository"
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/usecase"
 )
 
 func main() {
@@ -33,4 +37,25 @@ func main() {
 		log.Fatal(err)
 	}
 	defer pool.Close()
+
+	// Repository
+	venueRepository := repository.NewVenueRepository(pool)
+
+	// Usecase
+	venueUsecase := usecase.NewVenueUsecase(venueRepository)
+
+	// Handler
+	venueHandler := handler.NewVenueHandler(venueUsecase)
+
+	// Router
+	router := gin.Default()
+
+	router.POST("/venues", venueHandler.CreateVenue)
+
+	// Server
+	address := fmt.Sprintf(":%d", cfg.HTTPServer.Port)
+
+	if err := router.Run(address); err != nil {
+		log.Fatal(err)
+	}
 }
