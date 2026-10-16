@@ -55,6 +55,7 @@ func main() {
 
 	router.POST("/venues", venueHandler.CreateVenue)
 	router.POST("/events", eventHandler.CreateEvent)
+	router.GET("/events", eventHandler.GetAllEvents)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.HTTPServer.Port)

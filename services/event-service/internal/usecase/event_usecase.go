@@ -10,6 +10,7 @@ import (
 
 type EventUsecase interface {
 	CreateEvent(ctx context.Context, req dto.CreateEventRequest) (dto.CreateEventResponse, error)
+	GetAllEvents(ctx context.Context) ([]dto.EventResponse, error)
 }
 
 type eventUsecase struct {
@@ -47,4 +48,28 @@ func (uc *eventUsecase) CreateEvent(ctx context.Context, req dto.CreateEventRequ
 	}
 
 	return eventDTO, nil
+}
+
+func (uc *eventUsecase) GetAllEvents(ctx context.Context) ([]dto.EventResponse, error) {
+	events, err := uc.repo.GetAllEvents(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed get all events: %w", err)
+	}
+
+	eventsDTO := make([]dto.EventResponse, 0)
+
+	for _, value := range events {
+		eventDTO := dto.EventResponse{
+			ID:          value.ID,
+			Name:        value.Name,
+			Description: value.Description,
+			StartTime:   value.StartTime,
+			EndTime:     value.EndTime,
+			Status:      value.Status,
+		}
+
+		eventsDTO = append(eventsDTO, eventDTO)
+	}
+
+	return eventsDTO, nil
 }

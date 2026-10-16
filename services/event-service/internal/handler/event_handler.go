@@ -34,3 +34,13 @@ func (h *EventHandler) CreateEvent(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, eventResponse)
 }
+
+func (h *EventHandler) GetAllEvents(ctx *gin.Context) {
+	eventsResponse, err := h.usecase.GetAllEvents(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "server error"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, eventsResponse)
+}

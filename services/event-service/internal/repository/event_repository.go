@@ -11,6 +11,7 @@ import (
 
 type EventRepository interface {
 	CreateEvent(ctx context.Context, req dto.CreateEventData) (domain.Event, error)
+	GetAllEvents(ctx context.Context) ([]domain.Event, error)
 }
 
 type PostgresEventRepository struct {
@@ -58,4 +59,45 @@ func (r *PostgresEventRepository) CreateEvent(ctx context.Context, req dto.Creat
 	}
 
 	return event, nil
+}
+
+func (r *PostgresEventRepository) GetAllEvents(ctx context.Context) ([]domain.Event, error) {
+	const query = `
+		SELECT id, name, description, venue_id,
+			start_time, end_time, status
+		FROM events
+	`
+
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed get all events: %w", err)
+	}
+	defer rows.Close()
+
+	var events []domain.Event
+
+	for rows.Next() {
+		var event domain.Event
+
+		err := rows.Scan(
+			&event.ID,
+			&event.Name,
+			&event.Description,
+			&event.VenueID,
+			&event.StartTime,
+			&event.EndTime,
+			&event.Status,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract: %w", err)
+		}
+
+		events = append(events, event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("get events: %w", err)
+	}
+
+	return events, nil
 }

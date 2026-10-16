@@ -32,3 +32,12 @@ type CreateEventData struct {
 	EndTime     time.Time
 	Status      domain.EventStatus
 }
+
+type EventResponse struct {
+	ID          int64              `json:"id"`
+	Name        string             `json:"name"`
+	Description string             `json:"description"`
+	StartTime   time.Time          `json:"start_time"`
+	EndTime     time.Time          `json:"end_time"`
+	Status      domain.EventStatus `json:"status"`
+}
