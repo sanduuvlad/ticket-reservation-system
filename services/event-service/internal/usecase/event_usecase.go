@@ -11,6 +11,7 @@ import (
 type EventUsecase interface {
 	CreateEvent(ctx context.Context, req dto.CreateEventRequest) (dto.CreateEventResponse, error)
 	GetAllEvents(ctx context.Context) ([]dto.EventResponse, error)
+	GetByIDEvent(ctx context.Context, eventID int64) (dto.EventResponse, error)
 }
 
 type eventUsecase struct {
@@ -72,4 +73,22 @@ func (uc *eventUsecase) GetAllEvents(ctx context.Context) ([]dto.EventResponse, 
 	}
 
 	return eventsDTO, nil
+}
+
+func (uc *eventUsecase) GetByIDEvent(ctx context.Context, eventID int64) (dto.EventResponse, error) {
+	event, err := uc.repo.GetByIDEvent(ctx, eventID)
+	if err != nil {
+		return dto.EventResponse{}, err
+	}
+
+	eventDTO := dto.EventResponse{
+		ID:          event.ID,
+		Name:        event.Name,
+		Description: event.Description,
+		StartTime:   event.StartTime,
+		EndTime:     event.EndTime,
+		Status:      event.Status,
+	}
+
+	return eventDTO, nil
 }

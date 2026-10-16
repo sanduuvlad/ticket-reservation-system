@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/apperror"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/dto"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/usecase"
 )
@@ -43,4 +46,27 @@ func (h *EventHandler) GetAllEvents(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, eventsResponse)
+}
+
+func (h *EventHandler) GetByIDEvent(ctx *gin.Context) {
+	eventIDStr := ctx.Param("id")
+
+	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "bad request"})
+		return
+	}
+
+	eventResponse, err := h.usecase.GetByIDEvent(ctx.Request.Context(), eventID)
+	if err != nil {
+		if errors.Is(err, apperror.ErrEventNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"status": "event not found"})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "server error"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, eventResponse)
 }
