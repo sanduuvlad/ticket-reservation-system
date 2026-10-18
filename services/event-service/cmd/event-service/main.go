@@ -54,6 +54,8 @@ func main() {
 	router := gin.Default()
 
 	router.POST("/venues", venueHandler.CreateVenue)
+	router.GET("/venues/:id", venueHandler.GetByID)
+
 	router.POST("/events", eventHandler.CreateEvent)
 	router.GET("/events", eventHandler.GetAllEvents)
 	router.GET("/events/:id", eventHandler.GetByIDEvent)

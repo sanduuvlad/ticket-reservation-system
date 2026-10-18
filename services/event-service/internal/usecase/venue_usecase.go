@@ -10,6 +10,7 @@ import (
 
 type VenueUsecase interface {
 	CreateVenue(ctx context.Context, req dto.CreateVenueRequest) (dto.CreateVenueResponse, error)
+	GetByID(ctx context.Context, venueID int64) (dto.VenueResponse, error)
 }
 
 type venueUsecase struct {
@@ -36,6 +37,23 @@ func (uc *venueUsecase) CreateVenue(ctx context.Context, req dto.CreateVenueRequ
 	}
 
 	venueDTO := dto.CreateVenueResponse{
+		ID:      venue.ID,
+		Name:    venue.Name,
+		Country: venue.Country,
+		City:    venue.City,
+		Address: venue.Address,
+	}
+
+	return venueDTO, nil
+}
+
+func (uc *venueUsecase) GetByID(ctx context.Context, venueID int64) (dto.VenueResponse, error) {
+	venue, err := uc.repo.GetByID(ctx, venueID)
+	if err != nil {
+		return dto.VenueResponse{}, err
+	}
+
+	venueDTO := dto.VenueResponse{
 		ID:      venue.ID,
 		Name:    venue.Name,
 		Country: venue.Country,
