@@ -41,14 +41,17 @@ func main() {
 	// Repository
 	venueRepository := repository.NewVenueRepository(pool)
 	eventRepository := repository.NewEventRepository(pool)
+	seatRepository := repository.NewSeatRepository(pool)
 
 	// Usecase
 	venueUsecase := usecase.NewVenueUsecase(venueRepository)
 	eventUsecase := usecase.NewEventUsecase(eventRepository)
+	seatUsecase := usecase.NewSeatUsecase(seatRepository)
 
 	// Handler
 	venueHandler := handler.NewVenueHandler(venueUsecase)
 	eventHandler := handler.NewEventHandler(eventUsecase)
+	seatHandler := handler.NewSeatHandler(seatUsecase)
 
 	// Router
 	router := gin.Default()
@@ -59,6 +62,8 @@ func main() {
 	router.POST("/events", eventHandler.CreateEvent)
 	router.GET("/events", eventHandler.GetAllEvents)
 	router.GET("/events/:id", eventHandler.GetByIDEvent)
+
+	router.GET("/events/:id/seats", seatHandler.GetByEventID)
 
 	// Server
 	address := fmt.Sprintf(":%d", cfg.HTTPServer.Port)
