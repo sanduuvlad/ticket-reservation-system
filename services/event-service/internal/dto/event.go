@@ -13,6 +13,8 @@ type CreateEventRequest struct {
 	StartTime   time.Time          `json:"start_time" binding:"required"`
 	EndTime     time.Time          `json:"end_time" binding:"required"`
 	Status      domain.EventStatus `json:"status" binding:"required"`
+	RowsCount   int                `json:"rows_count" binding:"required,min=1,max=26"`
+	SeatsPerRow int                `json:"seats_per_row" binding:"required,min=1"`
 }
 
 type CreateEventResponse struct {
@@ -31,6 +33,8 @@ type CreateEventData struct {
 	StartTime   time.Time
 	EndTime     time.Time
 	Status      domain.EventStatus
+	RowsCount   int
+	SeatsPerRow int
 }
 
 type EventResponse struct {

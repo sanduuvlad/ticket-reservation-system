@@ -13,7 +13,7 @@ import (
 )
 
 type EventRepository interface {
-	CreateEvent(ctx context.Context, req dto.CreateEventData) (domain.Event, error)
+	CreateEvent(ctx context.Context, req dto.CreateEventData, seats []domain.Seat) (domain.Event, error)
 	GetAllEvents(ctx context.Context) ([]domain.Event, error)
 	GetByIDEvent(ctx context.Context, eventID int64) (domain.Event, error)
 }
@@ -28,7 +28,17 @@ func NewEventRepository(pool *pgxpool.Pool) *PostgresEventRepository {
 	}
 }
 
-func (r *PostgresEventRepository) CreateEvent(ctx context.Context, req dto.CreateEventData) (domain.Event, error) {
+func (r *PostgresEventRepository) CreateEvent(
+	ctx context.Context,
+	req dto.CreateEventData,
+	seats []domain.Seat,
+) (domain.Event, error) {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return domain.Event{}, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
 	const query = `
 		INSERT INTO events (name, description, venue_id,
 			start_time, end_time, status)
@@ -39,7 +49,7 @@ func (r *PostgresEventRepository) CreateEvent(ctx context.Context, req dto.Creat
 
 	var event domain.Event
 
-	err := r.pool.QueryRow(
+	err = tx.QueryRow(
 		ctx,
 		query,
 		req.Name,
@@ -62,6 +72,27 @@ func (r *PostgresEventRepository) CreateEvent(ctx context.Context, req dto.Creat
 		return domain.Event{}, fmt.Errorf("create event: %w", err)
 	}
 
+	const insertSeatQuery = `
+		INSERT INTO seats (event_id, seat_row, seat_number)
+		VALUES ($1, $2, $3)
+	`
+	for _, seat := range seats {
+
+		_, err := tx.Exec(
+			ctx,
+			insertSeatQuery,
+			event.ID,
+			seat.Row,
+			seat.Number,
+		)
+		if err != nil {
+			return domain.Event{}, fmt.Errorf("create seat: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return domain.Event{}, fmt.Errorf("commit transaction: %w", err)
+	}
 	return event, nil
 }
 

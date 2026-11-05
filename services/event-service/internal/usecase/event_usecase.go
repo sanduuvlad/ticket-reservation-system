@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/domain"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/dto"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/repository"
 )
@@ -24,6 +25,25 @@ func NewEventUsecase(repo repository.EventRepository) *eventUsecase {
 	}
 }
 
+func generateSeats(rowsCount, seatsPerRow int) []domain.Seat {
+	seats := make([]domain.Seat, 0, rowsCount*seatsPerRow)
+
+	for i := 0; i < rowsCount; i++ {
+		row := string(rune('A' + i))
+
+		for j := 1; j <= seatsPerRow; j++ {
+			seat := domain.Seat{
+				Row:    row,
+				Number: int64(j),
+			}
+
+			seats = append(seats, seat)
+		}
+	}
+
+	return seats
+}
+
 func (uc *eventUsecase) CreateEvent(ctx context.Context, req dto.CreateEventRequest) (dto.CreateEventResponse, error) {
 	data := dto.CreateEventData{
 		Name:        req.Name,
@@ -32,9 +52,13 @@ func (uc *eventUsecase) CreateEvent(ctx context.Context, req dto.CreateEventRequ
 		StartTime:   req.StartTime,
 		EndTime:     req.EndTime,
 		Status:      req.Status,
+		RowsCount:   req.RowsCount,
+		SeatsPerRow: req.SeatsPerRow,
 	}
 
-	event, err := uc.repo.CreateEvent(ctx, data)
+	seats := generateSeats(req.RowsCount, req.SeatsPerRow)
+
+	event, err := uc.repo.CreateEvent(ctx, data, seats)
 	if err != nil {
 		return dto.CreateEventResponse{}, fmt.Errorf("create event: %w", err)
 	}
