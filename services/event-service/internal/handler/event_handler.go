@@ -25,13 +25,27 @@ func (h *EventHandler) CreateEvent(ctx *gin.Context) {
 	var request dto.CreateEventRequest
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "bad request"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
 		return
 	}
 
 	eventResponse, err := h.usecase.CreateEvent(ctx.Request.Context(), request)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"status": "internal server error"})
+		if errors.Is(err, apperror.ErrInvalidEventTime) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid event time"})
+			return
+		}
+
+		if errors.Is(err, apperror.ErrInvalidEventStatus) {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid event status"})
+			return
+		}
+
+		if errors.Is(err, apperror.ErrVenueNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{"error": "venue not found"})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

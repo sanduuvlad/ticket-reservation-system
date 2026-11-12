@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/apperror"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/domain"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/dto"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/repository"
@@ -16,12 +17,14 @@ type EventUsecase interface {
 }
 
 type eventUsecase struct {
-	repo repository.EventRepository
+	repo      repository.EventRepository
+	repoVenue repository.VenueRepository
 }
 
-func NewEventUsecase(repo repository.EventRepository) *eventUsecase {
+func NewEventUsecase(repo repository.EventRepository, repoVenue repository.VenueRepository) *eventUsecase {
 	return &eventUsecase{
-		repo: repo,
+		repo:      repo,
+		repoVenue: repoVenue,
 	}
 }
 
@@ -45,6 +48,18 @@ func generateSeats(rowsCount, seatsPerRow int) []domain.Seat {
 }
 
 func (uc *eventUsecase) CreateEvent(ctx context.Context, req dto.CreateEventRequest) (dto.CreateEventResponse, error) {
+	if !req.EndTime.After(req.StartTime) {
+		return dto.CreateEventResponse{}, fmt.Errorf("validate event time: %w", apperror.ErrInvalidEventTime)
+	}
+
+	if req.Status != domain.EventStatusDraft && req.Status != domain.EventStatusCancelled && req.Status != domain.EventStatusPublished {
+		return dto.CreateEventResponse{}, fmt.Errorf("validate event status: %w", apperror.ErrInvalidEventStatus)
+	}
+
+	if _, err := uc.repoVenue.GetByID(ctx, req.VenueID); err != nil {
+		return dto.CreateEventResponse{}, fmt.Errorf("validate event venue: %w", err)
+	}
+
 	data := dto.CreateEventData{
 		Name:        req.Name,
 		Description: req.Description,

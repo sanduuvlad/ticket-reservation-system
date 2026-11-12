@@ -45,7 +45,7 @@ func main() {
 
 	// Usecase
 	venueUsecase := usecase.NewVenueUsecase(venueRepository)
-	eventUsecase := usecase.NewEventUsecase(eventRepository)
+	eventUsecase := usecase.NewEventUsecase(eventRepository, venueRepository)
 	seatUsecase := usecase.NewSeatUsecase(seatRepository)
 
 	// Handler
