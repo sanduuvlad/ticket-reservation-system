@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/apperror"
 	"github.com/sanduuvlad/ticket-reservation-system/services/event-service/internal/domain"
@@ -47,9 +48,17 @@ func generateSeats(rowsCount, seatsPerRow int) []domain.Seat {
 	return seats
 }
 
+func validateEventTime(startTime, endTime time.Time) error {
+	if !endTime.After(startTime) {
+		return fmt.Errorf("validate event time: %w", apperror.ErrInvalidEventTime)
+	}
+
+	return nil
+}
+
 func (uc *eventUsecase) CreateEvent(ctx context.Context, req dto.CreateEventRequest) (dto.CreateEventResponse, error) {
-	if !req.EndTime.After(req.StartTime) {
-		return dto.CreateEventResponse{}, fmt.Errorf("validate event time: %w", apperror.ErrInvalidEventTime)
+	if err := validateEventTime(req.StartTime, req.EndTime); err != nil {
+		return dto.CreateEventResponse{}, err
 	}
 
 	if req.Status != domain.EventStatusDraft && req.Status != domain.EventStatusCancelled && req.Status != domain.EventStatusPublished {
